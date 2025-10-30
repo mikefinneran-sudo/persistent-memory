@@ -59,7 +59,7 @@ You: "What's the status of LifeHub?"
 
 ### Switch Projects
 ```
-You: "Pause LifeHub, work on WalterFetch"
+You: "Pause LifeHub, work on ProjectX"
 ```
 
 ### Create New Project
@@ -79,8 +79,8 @@ You: "Create a project workspace for [name]"
 **Projects**:
 - `~/.claude/projects/[project-name]/`
 
-**Vault**:
-- `/Users/mikefinneran/Documents/ObsidianVault/`
+**Vault** (example):
+- `/Users/username/Documents/Vault/`
 
 ---
 
@@ -216,7 +216,7 @@ Claude reads WORKING-CONTEXT → tells you
 
 ### Scenario 2: Switch Projects
 ```
-You: "Continue WalterFetch"
+You: "Continue ProjectX"
 Claude reads registry → loads project → ready
 ```
 
@@ -270,4 +270,3 @@ Keep CLAUDE.md lean, make projects detailed, track current work.
 
 **Created**: 2025-10-27
 **Version**: 1.0
-**For**: Mike Finneran

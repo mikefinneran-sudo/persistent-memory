@@ -178,10 +178,10 @@ Claude: "Yesterday we finished LifeHub package. Today: send to Omar, test automa
 
 ### Example 3: Switching Projects
 ```
-You: "Continue WalterFetch"
+You: "Continue ProjectX"
 Claude: *Checks PROJECT-REGISTRY → Finds location*
 Claude: *Reads project README → Gets context*
-Claude: "WalterFetch - PE target sourcing. Current: Build pitch deck. Ready?"
+Claude: "ProjectX - Target sourcing. Current: Build pitch deck. Ready?"
 ```
 
 ---

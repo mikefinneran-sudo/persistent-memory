@@ -97,7 +97,7 @@ Claude: *Saves to correct location*
 ```
 You: "What projects am I working on?"
 Claude: *Reads PROJECT-REGISTRY.md*
-Claude: "You have 3 active projects: LifeHub (Medium), WalterFetch (High), Granola (Low)"
+Claude: "You have 3 active projects: LifeHub (Medium), ProjectX (High), Granola (Low)"
 ```
 
 ---
@@ -647,22 +647,22 @@ Your first automated daily note should have been created at 7 AM. Want to check 
 
 **You**:
 ```
-Pause LifeHub, let's work on WalterFetch
+Pause LifeHub, let's work on ProjectX
 ```
 
 **Claude**:
-- Updates WORKING-CONTEXT.md → Primary focus: WalterFetch
-- Checks PROJECT-REGISTRY.md → WalterFetch is High priority
+- Updates WORKING-CONTEXT.md → Primary focus: ProjectX
+- Checks PROJECT-REGISTRY.md → ProjectX is High priority
 - Looks for project workspace → Finds it in Obsidian vault
 - Reads project files
 
 **Claude responds**:
 ```
-Switching to WalterFetch (High priority).
+Switching to ProjectX (High priority).
 
 Current status: Customer research phase
-Goal: Build pitch deck, reach out to Great Range Capital
-Location: /Users/mikefinneran/Documents/ObsidianVault/Projects/WalterFetch.md
+Goal: Build pitch deck, reach out to potential investors
+Location: /Users/username/Documents/Projects/ProjectX.md
 
 Next action: Build pitch deck with customer value prop. Ready to start?
 ```
