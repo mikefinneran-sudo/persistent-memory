@@ -14,13 +14,14 @@ This document defines the Airtable base structure for the persistent memory syst
 
 **Base Name**: `Claude Persistent Memory`
 
-**Tables**: 5 core tables
+**Tables**: 6 core tables
 
 1. **Users** - Global user preferences
 2. **Projects** - Project registry and metadata
 3. **ProjectContent** - Detailed project documentation
 4. **WorkingContext** - Current focus and session tracking
 5. **Sessions** - Session history and logs
+6. **PromptingRules** - Natural language command rules and behavioral preferences (NEW in v2.1)
 
 ---
 
@@ -392,6 +393,114 @@ CREATE WorkingContext SET userId={currentUser}, weekStart={monday}, isActive=tru
 - Integration tests
 - User documentation
 - API reference
+
+---
+
+## Table 6: PromptingRules (NEW in v2.1)
+
+**Purpose**: Stores natural language command rules and behavioral preferences for intelligent command interpretation
+
+### Fields
+
+| Field Name | Type | Description | Required |
+|------------|------|-------------|----------|
+| `id` | Auto number | Primary key | Yes |
+| `userId` | Single line text | Links to Users.userId | Yes |
+| `ruleType` | Single select | COMMAND, BEHAVIOR, PREFERENCE, WORKFLOW | Yes |
+| `category` | Single line text | Grouping (e.g., "navigation", "execution") | No |
+| `trigger` | Single line text | What activates this rule (e.g., "Go", "Done") | Yes |
+| `contextPatterns` | Long text | When this applies (JSON array of patterns) | No |
+| `action` | Long text | What to do (JSON object describing action) | Yes |
+| `priority` | Number | Rule priority (higher = first) | Yes |
+| `isActive` | Checkbox | Whether rule is enabled | Yes |
+| `description` | Long text | Human-readable explanation | No |
+| `examples` | Long text | Usage examples (JSON array) | No |
+| `createdAt` | Created time | When record was created | Auto |
+| `updatedAt` | Last modified time | When record was last updated | Auto |
+
+### Relationships
+- Many-to-one with Users (via `userId`)
+
+### Indexes
+- Index on (`userId`, `trigger`, `isActive`)
+- Index on (`userId`, `ruleType`)
+
+### Rule Types
+
+**COMMAND**: Shorthand command definitions
+- Maps natural language like "Go" to contextual actions
+- Example: "Go" when ready → execute next step
+- Example: "Go" when blocked → explain why blocked
+
+**BEHAVIOR**: How Claude should act in certain situations
+- Defines behavioral patterns
+- Example: When task completes → show summary
+- Example: When unclear → ask clarifying questions
+
+**PREFERENCE**: User communication preferences
+- Verbosity level, emoji usage, error detail
+- Applied globally to all interactions
+- Example: prefer concise responses
+
+**WORKFLOW**: Task-specific automation
+- Automated steps for common workflows
+- Example: On code change → lint, test, commit
+- Example: On PR creation → run checks, notify
+
+### Example Records
+
+**Command Rule - "Go" when ready:**
+```json
+{
+  "userId": "user@example.com",
+  "ruleType": "COMMAND",
+  "trigger": "Go",
+  "contextPatterns": [{"type": "task_state", "value": "ready_to_proceed"}],
+  "action": {
+    "type": "contextual_execution",
+    "handlers": {
+      "ready_to_proceed": {
+        "response": "execute_next_logical_step",
+        "show_progress": true
+      }
+    }
+  },
+  "priority": 100,
+  "isActive": true,
+  "description": "Execute next step when ready"
+}
+```
+
+**Preference Rule - Communication style:**
+```json
+{
+  "userId": "user@example.com",
+  "ruleType": "PREFERENCE",
+  "category": "communication",
+  "trigger": "always",
+  "action": {
+    "type": "preference",
+    "settings": {
+      "verbosity": "concise",
+      "use_emojis": false,
+      "error_detail_level": "full",
+      "proactive_suggestions": true
+    }
+  },
+  "priority": 50,
+  "isActive": true,
+  "description": "Default communication preferences"
+}
+```
+
+### Default Rules
+
+The system automatically creates these default rules for new users:
+
+1. **Go (ready)** - Execute next step when ready to proceed
+2. **Go (blocked)** - Explain blocking reason when blocked
+3. **Done** - Acknowledge task completion
+4. **Communication Preferences** - Default to concise, detailed errors, proactive
 
 ---
 

@@ -6,6 +6,9 @@
  */
 
 import { AirtableService } from './airtable';
+import { SessionInitializer } from './session-initializer';
+import { CommandParser } from './command-parser';
+import { ContextEngine } from './context-engine';
 import {
   ClientConfig,
   User,
@@ -17,14 +20,105 @@ import {
   ProjectStatus,
   ProjectPriority,
 } from '../types';
+import {
+  SessionContext,
+  ParsedCommand,
+  ActionResult,
+} from '../types/prompting-rules';
 
 export class MemoryClient {
   private airtable: AirtableService;
   private config: ClientConfig;
+  private sessionContext?: SessionContext & { parser: CommandParser; contextEngine: ContextEngine };
+  private sessionInitializer: SessionInitializer;
 
   constructor(config: ClientConfig) {
     this.config = config;
     this.airtable = new AirtableService(config);
+    this.sessionInitializer = new SessionInitializer(config);
+  }
+
+  // ==========================================================================
+  // Session & Rules Methods (NEW)
+  // ==========================================================================
+
+  /**
+   * Initializes session with prompting rules
+   * Call this at the start of a session to enable intelligent command parsing
+   */
+  async initializeSession(): Promise<SessionContext> {
+    this.sessionContext = await this.sessionInitializer.initialize() as any;
+    return this.sessionContext;
+  }
+
+  /**
+   * Processes a natural language command using prompting rules
+   *
+   * Example: processCommand("Go") will contextually execute next step or explain why blocked
+   */
+  async processCommand(input: string): Promise<ActionResult> {
+    // Auto-initialize if not done
+    if (!this.sessionContext) {
+      await this.initializeSession();
+    }
+
+    const { parser, contextEngine } = this.sessionContext!;
+
+    // Parse the command
+    const parsed = parser.parse(input);
+
+    // Update context
+    await contextEngine.collectContext();
+    contextEngine.autoInfer();
+    contextEngine.recordCommand(input);
+
+    const context = contextEngine.getContext();
+
+    // Find matching rule
+    const rule = parser.getBestMatch(parsed, context);
+
+    if (!rule) {
+      return {
+        success: false,
+        error: `Unknown command: "${input}". No matching rules found.`,
+      };
+    }
+
+    // Execute the rule's action
+    const result = await parser.executeAction(rule, context);
+
+    return result;
+  }
+
+  /**
+   * Updates the current todo list context
+   */
+  updateTodoContext(todos: any[]): void {
+    if (!this.sessionContext) return;
+    this.sessionContext.contextEngine.updateTodoContext(todos);
+  }
+
+  /**
+   * Sets the current task state
+   */
+  setTaskState(state: 'ready_to_proceed' | 'blocked' | 'waiting_for_user' | 'in_progress' | 'completed' | 'paused'): void {
+    if (!this.sessionContext) return;
+    this.sessionContext.contextEngine.setTaskState(state);
+  }
+
+  /**
+   * Gets the current session context
+   */
+  getSessionContext(): SessionContext | undefined {
+    return this.sessionContext;
+  }
+
+  /**
+   * Refreshes prompting rules (reloads from Airtable)
+   */
+  async refreshRules(): Promise<void> {
+    if (!this.sessionContext) return;
+    this.sessionContext = await this.sessionInitializer.refresh(this.sessionContext) as any;
   }
 
   // ==========================================================================
