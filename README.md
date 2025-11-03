@@ -1,32 +1,83 @@
-# Persistent Memory System - Documentation
+# Persistent Memory System with Airtable Backend
 
-**How Claude Code remembers your work across sessions**
+**Cloud-based persistent memory for Claude Code**
+
+---
+
+## 🎉 Now with Airtable Integration!
+
+The persistent memory system now supports **Airtable as a backend**, giving you:
+
+✅ **Cloud sync** across devices
+✅ **Structured data** with relationships
+✅ **API access** for integrations
+✅ **Version history** built-in
+✅ **Collaboration** capabilities (future)
+✅ **Visual interface** via Airtable
 
 ---
 
 ## Quick Start
 
-**New here?** → Read `USER-GUIDE.md` (15 minutes)
+### Option 1: Airtable Backend (New! ⭐)
 
-**Quick reference?** → Read `QUICKREF.md` (2 minutes)
+**Setup in 5 minutes:**
+1. Read `SETUP.md` for complete instructions
+2. Create Airtable base (see `AIRTABLE-SCHEMA.md`)
+3. Configure `.env` with your credentials
+4. Run migration: `npm run migrate`
+5. Start using: `npm run build && node dist/examples/basic-usage.js`
 
-**Want details?** → Read `PROJECT.md` (10 minutes)
+### Option 2: File-Based (Original)
+
+**Legacy file-based system:**
+- Read `USER-GUIDE.md` (15 minutes)
+- Read `QUICKREF.md` (2 minutes)
+- Read `PROJECT.md` (10 minutes)
 
 ---
 
 ## What is This?
 
-This is documentation for Claude Code's persistent memory system - the files and structure that let Claude remember:
+This is Claude Code's persistent memory system - a structured way for Claude to remember:
 - Your preferences
 - Active projects
 - Current work
 - Past decisions
 
-**Think of it as**: Claude's filing system for your information
+**Now available in two modes:**
+- **Airtable**: Cloud-based, synced, structured (recommended)
+- **File-based**: Local markdown files (legacy)
+
+**Think of it as**: Claude's filing system for your information, now in the cloud
 
 ---
 
-## File Structure
+## Architecture
+
+### Airtable Backend (New)
+
+```
+Airtable Base: "Claude Persistent Memory"
+├── Users                        # Your global preferences
+├── Projects                     # Project registry
+├── ProjectContent               # Project documentation
+├── WorkingContext               # Current focus
+└── Sessions                     # Session history
+
+SDK Structure:
+src/
+├── services/
+│   ├── airtable.ts             # Airtable API client
+│   └── memory-client.ts        # High-level API
+├── types/                      # TypeScript types
+├── config/                     # Configuration
+├── utils/                      # Cache, retry logic
+└── scripts/
+    └── migrate.ts              # Migration tool
+```
+
+### File-Based (Legacy)
 
 ```
 ~/.claude/
@@ -37,6 +88,8 @@ This is documentation for Claude Code's persistent memory system - the files and
 └── projects/
     ├── persistent-memory/       # This documentation
     │   ├── README.md           # You are here
+    │   ├── SETUP.md            # Airtable setup
+    │   ├── AIRTABLE-SCHEMA.md  # Schema design
     │   ├── USER-GUIDE.md       # Complete guide
     │   ├── PROJECT.md          # System overview
     │   ├── STATUS.md           # Current state
@@ -50,6 +103,16 @@ This is documentation for Claude Code's persistent memory system - the files and
 
 ## Documentation Files
 
+### Airtable Backend (New)
+
+| File | Purpose | Read When |
+|------|---------|-----------|
+| **SETUP.md** | Complete setup guide | Setting up Airtable backend |
+| **AIRTABLE-SCHEMA.md** | Database schema design | Understanding data model |
+| **examples/basic-usage.ts** | Code examples | Learning the SDK |
+
+### File-Based (Legacy)
+
 | File | Purpose | Read When |
 |------|---------|-----------|
 | **USER-GUIDE.md** | Complete how-to guide | First time or need details |
@@ -61,23 +124,39 @@ This is documentation for Claude Code's persistent memory system - the files and
 
 ## Quick Commands
 
-### See What You're Working On
+### Airtable Backend (SDK)
+
+```typescript
+import { MemoryClient, getConfig } from '@claude/persistent-memory';
+
+const client = new MemoryClient(getConfig());
+
+// See what you're working on
+const session = await client.loadSession();
+
+// Check active projects
+const projects = await client.listProjects();
+
+// Review preferences
+const user = await client.getPreferences();
+
+// Load project
+const project = await client.loadProject('my-project');
+```
+
+### File-Based (CLI)
+
 ```bash
+# See what you're working on
 cat ~/.claude/WORKING-CONTEXT.md
-```
 
-### Check Active Projects
-```bash
+# Check active projects
 cat ~/.claude/PROJECT-REGISTRY.md
-```
 
-### Review Preferences
-```bash
+# Review preferences
 cat ~/.claude/CLAUDE.md
-```
 
-### Navigate to Project
-```bash
+# Navigate to project
 cd ~/.claude/projects/[project-name]
 cat README.md
 ```
@@ -282,7 +361,20 @@ Start your next session with "What am I working on?" and see it in action.
 
 ---
 
-**Last Updated**: 2025-10-27
-**Version**: 1.0
+**Last Updated**: 2025-11-03
+**Version**: 2.0 (Airtable Backend)
 **Maintained by**: Claude Code
 **For**: Mike Finneran
+
+---
+
+## Migration from v1.0 (File-Based)
+
+If you're upgrading from the file-based system:
+
+1. **Backup your data**: `cp -r ~/.claude ~/.claude.backup`
+2. **Follow SETUP.md**: Create Airtable base
+3. **Run migration**: `npm run migrate -- --source ~/.claude`
+4. **Verify**: Test with examples
+
+See `SETUP.md` for complete migration instructions.
