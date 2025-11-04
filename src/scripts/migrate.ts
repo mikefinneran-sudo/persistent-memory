@@ -5,6 +5,13 @@
  * Migrates existing persistent memory data from the file-based system
  * to Airtable backend.
  *
+ * Handles:
+ *   - Global CLAUDE.md (~/.claude/CLAUDE.md) → Users table
+ *   - Project CLAUDE.md (./CLAUDE.md) → ProjectContent table
+ *   - PROJECT-REGISTRY.md → Projects table
+ *   - Project workspaces → ProjectContent table
+ *   - WORKING-CONTEXT.md → WorkingContext table
+ *
  * Usage:
  *   npm run migrate -- --source ~/.claude --dry-run
  *   npm run migrate -- --source ~/.claude
@@ -60,14 +67,17 @@ class Migrator {
     console.log(`Mode: ${this.dryRun ? 'DRY RUN (no changes will be made)' : 'LIVE'}\n`);
 
     try {
-      // Step 1: Migrate user preferences
+      // Step 1: Migrate global user preferences from ~/.claude/CLAUDE.md
       await this.migrateUser();
 
-      // Step 2: Migrate projects and content
+      // Step 2: Migrate projects and content (including project-specific CLAUDE.md)
       await this.migrateProjects();
 
       // Step 3: Migrate working context
       await this.migrateWorkingContext();
+
+      // Step 4: Check for project-local CLAUDE.md in current directory
+      await this.migrateProjectCLAUDE();
 
       console.log('\n✅ Migration completed successfully!\n');
       this.printStats();
@@ -458,6 +468,65 @@ class Migrator {
   }
 
   /**
+   * Migrates project-specific CLAUDE.md from current directory
+   */
+  private async migrateProjectCLAUDE(): Promise<void> {
+    console.log('\n📝 Checking for project-specific CLAUDE.md...');
+
+    // Check current working directory for CLAUDE.md
+    const cwd = process.cwd();
+    const projectClaudePath = path.join(cwd, 'CLAUDE.md');
+
+    if (!fs.existsSync(projectClaudePath)) {
+      console.log('  ℹ️  No project-specific CLAUDE.md found in current directory');
+      return;
+    }
+
+    const content = fs.readFileSync(projectClaudePath, 'utf-8');
+
+    // Try to determine project name from current directory
+    const projectName = path.basename(cwd);
+
+    console.log(`  📄 Found CLAUDE.md for project: ${projectName}`);
+
+    if (!this.dryRun) {
+      // Store project-specific CLAUDE.md as ProjectContent
+      try {
+        await this.client.updateProjectContent(projectName, 'NOTES', content, {
+          metadata: {
+            sourceFile: 'CLAUDE.md',
+            description: 'Project-specific Claude configuration and context',
+            migratedAt: new Date().toISOString(),
+          },
+        });
+        console.log(`  ✓ Project CLAUDE.md migrated to ${projectName} ProjectContent`);
+        this.stats.projectContent++;
+      } catch (error) {
+        // If project doesn't exist, create it first
+        console.log(`  ⚠️  Project not found, creating: ${projectName}`);
+        await this.client.createProject(projectName, projectName, {
+          description: `Auto-created from CLAUDE.md in ${cwd}`,
+          status: 'Active',
+          priority: 'Medium',
+          initContent: false,
+        });
+        await this.client.updateProjectContent(projectName, 'NOTES', content, {
+          metadata: {
+            sourceFile: 'CLAUDE.md',
+            description: 'Project-specific Claude configuration and context',
+            migratedAt: new Date().toISOString(),
+          },
+        });
+        console.log(`  ✓ Project created and CLAUDE.md migrated`);
+        this.stats.projects++;
+        this.stats.projectContent++;
+      }
+    } else {
+      console.log(`    [DRY RUN] Would migrate CLAUDE.md to project: ${projectName}`);
+    }
+  }
+
+  /**
    * Prints migration statistics
    */
   private printStats(): void {
@@ -495,6 +564,15 @@ async function main() {
       console.log(`
 Usage: npm run migrate [options]
 
+Migrates persistent memory from file-based system to Airtable.
+
+What gets migrated:
+  - Global CLAUDE.md (~/.claude/CLAUDE.md) → Users table
+  - Project CLAUDE.md (./CLAUDE.md in current dir) → ProjectContent
+  - PROJECT-REGISTRY.md → Projects table
+  - Project workspace files → ProjectContent table
+  - WORKING-CONTEXT.md → WorkingContext table
+
 Options:
   --source <dir>   Source directory (default: ~/.claude)
   --dry-run        Preview migration without making changes
@@ -504,6 +582,8 @@ Examples:
   npm run migrate
   npm run migrate -- --source ~/.claude --dry-run
   npm run migrate -- --source /custom/path
+
+Note: Migration is NON-DESTRUCTIVE - your local files are never modified.
       `);
       process.exit(0);
     }
