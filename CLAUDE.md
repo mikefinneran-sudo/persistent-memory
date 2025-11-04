@@ -35,6 +35,23 @@ tags:
 - Caching and retry logic
 - Migration tools from file-based v1.0
 
+## Quick Start
+
+**New to this project?** Start here:
+
+1. **Setup**: Read `@SETUP.md` for Airtable configuration
+2. **Install**: `npm install`
+3. **Configure**: Copy `.env.example` to `.env`, add Airtable credentials
+4. **Build**: `npm run build`
+5. **Test**: `npm test`
+6. **Architecture**: Read `@PROJECT.md` for system design
+7. **Schema**: Reference `@AIRTABLE-SCHEMA.md` for database structure
+
+**Common workflows**:
+- Add feature → Edit code → Write tests → `npm run build && npm test` → Commit
+- Debug Airtable → Check `.env` → Verify `@AIRTABLE-SCHEMA.md` → Review retry logic
+- Migrate from v1.0 → Read `@SETUP.md` migration section → Run `npm run migrate`
+
 ## Tech Stack
 
 ### Core Technologies
@@ -178,9 +195,10 @@ npm ci                 # Clean install (CI environments)
 ## Airtable Integration Rules
 
 ### Schema Adherence
-- Follow schema defined in `AIRTABLE-SCHEMA.md` exactly
+- Follow schema defined in `@AIRTABLE-SCHEMA.md` exactly
 - Never create/modify tables outside documented schema
 - Use linked records for relationships (Users → Projects, Projects → ProjectContent)
+- Reference `@AIRTABLE-SCHEMA.md` before any database operations
 
 ### API Usage
 - Always use retry logic (imported from `utils/retry.ts`)
@@ -274,10 +292,11 @@ MAX_RETRIES=3                    # Max API retry attempts (default: 3)
 4. Session ends → Save all changes to Airtable
 
 ### Token Budget Awareness
-- Keep CLAUDE.md files minimal (<200 lines)
-- Keep project documentation focused and lean
+- Keep CLAUDE.md files focused (<400 lines for project root, <200 for subdirectories)
+- Keep project documentation lean - use `@filename` to reference external docs
 - Archive old content, don't let files bloat
-- External docs in `docs/` folder, reference when needed
+- External docs in root and `docs/` folder: `@PROJECT.md`, `@SETUP.md`, `@AIRTABLE-SCHEMA.md`, `@USER-GUIDE.md`
+- Reference external docs on-demand rather than duplicating content here
 
 ## Do Not Section (Guardrails)
 
@@ -286,7 +305,7 @@ MAX_RETRIES=3                    # Max API retry attempts (default: 3)
 - ❌ **Don't skip type definitions** - all functions must have types
 - ❌ **Don't use `any` type** - use `unknown` and type guards instead
 - ❌ **Don't commit `.env` files** - warn immediately if detected
-- ❌ **Don't modify Airtable schema** without documenting in `AIRTABLE-SCHEMA.md`
+- ❌ **Don't modify Airtable schema** without documenting in `@AIRTABLE-SCHEMA.md`
 - ❌ **Don't skip error handling** on Airtable API calls
 - ❌ **Don't break the build** - always run `npm run build` before committing
 - ❌ **Don't skip tests** - run `npm test` before pushing
@@ -299,7 +318,7 @@ MAX_RETRIES=3                    # Max API retry attempts (default: 3)
 - ✅ **Always** check cache before hitting Airtable
 - ✅ **Always** use TypeScript strict mode features
 - ✅ **Always** document new types in `types/index.ts`
-- ✅ **Always** update `AIRTABLE-SCHEMA.md` when schema changes
+- ✅ **Always** update `@AIRTABLE-SCHEMA.md` when schema changes
 - ✅ **Always** write tests for new service methods
 - ✅ **Always** use conventional commit format
 
@@ -313,11 +332,11 @@ MAX_RETRIES=3                    # Max API retry attempts (default: 3)
 ## Documentation Maintenance
 
 ### When to Update Docs
-- **PROJECT.md**: When architecture or design decisions change
-- **AIRTABLE-SCHEMA.md**: When adding/modifying Airtable tables or fields
-- **SETUP.md**: When setup process changes (new env vars, requirements)
-- **USER-GUIDE.md**: When user-facing features change
-- **This file (CLAUDE.md)**: When project conventions or rules change
+- **`@PROJECT.md`**: When architecture or design decisions change
+- **`@AIRTABLE-SCHEMA.md`**: When adding/modifying Airtable tables or fields
+- **`@SETUP.md`**: When setup process changes (new env vars, requirements)
+- **`@USER-GUIDE.md`**: When user-facing features change
+- **This file (`CLAUDE.md`)**: When project conventions or rules change
 
 ### Doc Style
 - Use Markdown with clear headings
@@ -337,7 +356,7 @@ MAX_RETRIES=3                    # Max API retry attempts (default: 3)
 6. Run `npm run build && npm test`
 
 ### Modify Airtable Schema
-1. Update `AIRTABLE-SCHEMA.md` first
+1. Update `@AIRTABLE-SCHEMA.md` first (documentation)
 2. Make changes in Airtable UI
 3. Update TypeScript types in `types/index.ts`
 4. Update `services/airtable.ts` mapping logic
@@ -346,10 +365,29 @@ MAX_RETRIES=3                    # Max API retry attempts (default: 3)
 
 ### Debug Airtable API Issues
 1. Check `.env` file for correct credentials
-2. Verify Airtable base schema matches `AIRTABLE-SCHEMA.md`
+2. Verify Airtable base schema matches `@AIRTABLE-SCHEMA.md`
 3. Check Airtable API rate limits (5 req/sec)
 4. Review retry logic in `utils/retry.ts`
 5. Enable debug logging if available
+6. Reference `@SETUP.md` for troubleshooting guide
+
+---
+
+## Version History
+
+### v2.0.0 (2025-11-04)
+- Added elite-tier CLAUDE.md with YAML frontmatter
+- Quick Start section for new contributors
+- External documentation references using `@filename` pattern
+- Token budget guidance updated (<400 lines for root, <200 for subdirectories)
+- Enhanced with step-by-step workflows for common tasks
+- Comprehensive guardrails in "Do Not" and "Always Do" sections
+
+### v1.0.0 (2025-10-27)
+- Initial file-based persistent memory system
+- 4-layer architecture (Global, Registry, Projects, Working Context)
+- Markdown-based documentation structure
+- Local file storage in `~/.claude/` directory
 
 ---
 
